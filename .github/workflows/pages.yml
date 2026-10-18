@@ -1,0 +1,54 @@
+name: Publish GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned MIT runtime
+        uses: actions/checkout@v4
+        with:
+          repository: brunosimon/folio-2025
+          ref: 41046b57eeed8d156d9c3fd7fa259900baef7816
+          path: upstream
+          sparse-checkout: |
+            sources
+            scripts
+            static
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            upstream/package-lock.json
+      - uses: actions/configure-pages@v5
+        id: pages
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+        working-directory: upstream
+      - run: npm run build:pages
+        env:
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+      - uses: actions/deploy-pages@v4
+        id: deployment

@@ -1,0 +1,34 @@
+MEU SITE 3D - COPIA COMPLETA PARA USAR NO SEU COMPUTADOR
+
+1. De dois cliques em INICIAR-SITE.bat.
+2. O navegador abre automaticamente quando o site estiver pronto.
+3. Deixe a janela do servidor aberta enquanto usa o site.
+4. Para parar, pressione Ctrl+C na janela do servidor.
+
+O endereco normalmente sera http://127.0.0.1:3077/.
+Se essa porta estiver ocupada, o inicializador escolhe outra ate 3097.
+O endereco escolhido aparece na janela e em runtime\ULTIMO-ENDERECO.txt.
+Se o site desta pasta ja estiver rodando, o BAT apenas abre esse servidor.
+
+Nao precisa instalar Node, executar npm nem recompilar para abrir esta copia.
+O Node para Windows, as dependencias, o build, o codigo-fonte e os assets 3D
+estao incluidos. Pode mover a pasta completa para outro local neste computador;
+nao mova apenas o BAT. O pacote foi testado neste Windows x64.
+
+CONTEUDO
+src\             Integracao Next.js e codigo gerado
+upstream\        Codigo original, assets, licenca e dependencias do mundo 3D
+public\world\    Mundo 3D compilado, imagens, modelos, audio e fontes locais
+.next\           Site pronto para executar
+node_modules\    Dependencias do host
+runtime\         Node incluido e informacoes do servidor
+docs\            Tokens, componentes, animacoes e validacao
+reference\       Capturas, logs e evidencias do estudo
+README.md        Documentacao tecnica completa do estudo original
+
+Esta e uma copia independente de bruno-simon-study. As instrucoes e caminhos
+antigos no README se referem ao estudo original; para abrir ESTA pasta, use o BAT.
+
+Mantivemos o mundo original. Ainda nao foram trocados nome, cores ou funcoes.
+O backend privado permanece desconectado. As fontes Google ainda usam internet.
+Creditos e licencas do trabalho original permanecem nos arquivos do projeto.

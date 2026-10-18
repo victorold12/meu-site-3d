@@ -1,0 +1,11 @@
+node_modules/
+.next/
+public/world/
+upstream/
+*.tsbuildinfo
+reference/bundle/
+reference/exported-scripts/
+reference/
+runtime/
+out/
+docs/build-info.json

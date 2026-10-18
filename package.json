@@ -1,0 +1,27 @@
+{
+  "name": "bruno-simon-interface-study",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:world": "node scripts/build-world.mjs",
+    "build": "npm run build:world && next build",
+    "build:pages": "node scripts/build-pages.mjs",
+    "dev": "npm run build:world && next dev --hostname 127.0.0.1 --port 3077",
+    "start": "next start --hostname 127.0.0.1 --port 3077",
+    "typecheck": "tsc --noEmit",
+    "extract": "python scripts/extract-study.py"
+  },
+  "dependencies": {
+    "next": "15.5.28",
+    "react": "19.1.10",
+    "react-dom": "19.1.10"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "playwright": "^1.64.1",
+    "typescript": "5.8.3"
+  }
+}

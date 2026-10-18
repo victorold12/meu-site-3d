@@ -1,0 +1,5 @@
+/* Somente o host. O DOM filho mantém integralmente o CSS original compilado. */
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #1d1721; }
+.portfolio-stage, .portfolio-runtime { position: fixed; inset: 0; width: 100%; height: 100%; }
+.portfolio-runtime { display: block; border: 0; }
+.runtime-fallback { color: #fff; font-family: sans-serif; padding: 2rem; }
