@@ -47,27 +47,70 @@ config.plugins.push({
       const patched = withImports.slice(0, start) + `    setLetters()
     {
         const references = this.references.items.get('letters')
-        const positions = references.map(reference => reference.userData.object.physical.body.translation())
+        const textOrder = [...references].reverse()
+        const letters = [...'VICTORHUGO']
+        if(textOrder.length !== letters.length)
+            throw new Error('Expected ten physical letters for VICTOR HUGO')
+
+        const positions = textOrder.map(reference => reference.userData.object.physical.body.translation())
+        const direction = new THREE.Vector3().subVectors(positions.at(-1), positions[0]).setY(0)
+        const originalSpan = direction.length()
+        direction.normalize()
         const center = positions.reduce((sum, position) => sum.add(new THREE.Vector3(position.x, position.y, position.z)), new THREE.Vector3()).multiplyScalar(1 / positions.length)
-        const first = positions[0]
-        const last = positions[positions.length - 1]
-        const angle = -Math.atan2(last.z - first.z, last.x - first.x)
-        for(const reference of references)
-            this.game.objects.disable(reference.userData.object)
-        const geometry = new TextGeometry('OGUH ROTCIV', {
-            font: new FontLoader().parse(helvetikerBold), size: 1.7, depth: 0.35,
-            curveSegments: 6, bevelEnabled: true, bevelThickness: 0.06,
-            bevelSize: 0.035, bevelSegments: 2
+        const font = new FontLoader().parse(helvetikerBold)
+        const glyphs = letters.map(letter => {
+            const geometry = new TextGeometry(letter, {
+                font, size: 1.8, depth: 0.46, curveSegments: 6,
+                bevelEnabled: true, bevelThickness: 0.035, bevelSize: 0.025, bevelSegments: 2
+            })
+            geometry.computeBoundingBox()
+            const width = geometry.boundingBox.max.x - geometry.boundingBox.min.x
+            geometry.center()
+            return { geometry, width }
         })
-        geometry.center()
-        const width = geometry.boundingBox.max.x - geometry.boundingBox.min.x
-        const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: 0xe879ff, roughness: 0.48 }))
-        mesh.scale.setScalar(Math.min(1, 11.5 / width))
-        mesh.position.set(center.x, center.y, center.z)
-        mesh.rotation.y = angle
-        mesh.castShadow = true
-        mesh.receiveShadow = true
-        this.game.scene.add(mesh)
+
+        const spacing = 0.12
+        const wordSpacing = 0.72
+        const textWidth = glyphs.reduce((sum, glyph) => sum + glyph.width, 0) + spacing * 8 + wordSpacing
+        const scale = Math.min(1, originalSpan / textWidth)
+        let cursor = -textWidth * scale / 2
+
+        for(let index = 0; index < glyphs.length; index++)
+        {
+            if(index > 0)
+                cursor += (index === 6 ? wordSpacing : spacing) * scale
+
+            const { geometry, width } = glyphs[index]
+            geometry.scale(scale, scale, scale)
+            const position = center.clone().addScaledVector(direction, cursor + width * scale / 2)
+            const object = textOrder[index].userData.object
+            const meshes = []
+            object.visual.object3D.traverse(child => {
+                if(child.isMesh)
+                    meshes.push(child)
+            })
+            if(meshes.length !== 1)
+                throw new Error('Expected one original mesh per physical letter')
+            meshes[0].geometry.dispose()
+            meshes[0].geometry = geometry
+            object.physical.body.setTranslation(position, false)
+            object.physical.initialState.position.x = position.x
+            object.physical.initialState.position.y = position.y
+            object.physical.initialState.position.z = position.z
+            object.visual.object3D.position.copy(position)
+            cursor += width * scale
+        }
+
+        for(const reference of references)
+        {
+            const physical = reference.userData.object.physical
+            physical.colliders[0].setActiveEvents(this.game.RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS)
+            physical.colliders[0].setContactForceEventThreshold(5)
+            physical.onCollision = (force, position) =>
+            {
+                this.game.audio.groups.get('hitBrick').playRandomNext(force, position)
+            }
+        }
     }
 
     ` + withImports.slice(end);
