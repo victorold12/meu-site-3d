@@ -39,6 +39,18 @@ config.plugins.push({
       if (patched === code) throw new Error('ProjectsArea image loader anchor not found');
       return patched;
     }
+    if (id.endsWith('/Game/Physics/Physics.js')) {
+      const patched = code
+        .replace('callback1(force, bodyPosition)', 'callback1(force, bodyPosition, body2)')
+        .replace('callback2(force, bodyPosition)', 'callback2(force, bodyPosition, body1)');
+      if (patched === code) throw new Error('Physics collision callback anchor not found');
+      return patched;
+    }
+    if (id.endsWith('/Game/Game.js')) {
+      const patched = code.replace('this.objects.resetAll()', 'this.objects.resetAll()\n            this.world.areas.landing?.resetLetters()');
+      if (patched === code) throw new Error('Game reset anchor not found');
+      return patched;
+    }
     if (id.endsWith('/Game/World/Areas/LandingArea.js')) {
       const withImports = code.replace("import * as THREE from 'three/webgpu'", "import * as THREE from 'three/webgpu'\nimport { TextGeometry } from 'three/addons/geometries/TextGeometry.js'\nimport { FontLoader } from 'three/addons/loaders/FontLoader.js'\nimport helvetikerBold from 'three/examples/fonts/helvetiker_bold.typeface.json'");
       const start = withImports.indexOf('    setLetters()');
@@ -58,6 +70,8 @@ config.plugins.push({
         direction.normalize()
         const center = positions.reduce((sum, position) => sum.add(new THREE.Vector3(position.x, position.y, position.z)), new THREE.Vector3()).multiplyScalar(1 / positions.length)
         const font = new FontLoader().parse(helvetikerBold)
+        const whiteMaterial = new MeshDefaultMaterial({ colorNode: color('#ffffff') })
+        this.letters = []
         const glyphs = letters.map(letter => {
             const geometry = new TextGeometry(letter, {
                 font, size: 1.8, depth: 0.46, curveSegments: 6,
@@ -93,6 +107,8 @@ config.plugins.push({
                 throw new Error('Expected one original mesh per physical letter')
             meshes[0].geometry.dispose()
             meshes[0].geometry = geometry
+            meshes[0].material = whiteMaterial
+            this.letters.push({ object, mesh: meshes[0], blocks: [], broken: false })
             object.physical.body.setTranslation(position, false)
             object.physical.initialState.position.x = position.x
             object.physical.initialState.position.y = position.y
@@ -101,16 +117,97 @@ config.plugins.push({
             cursor += width * scale
         }
 
-        for(const reference of references)
+        for(const letter of this.letters)
         {
-            const physical = reference.userData.object.physical
+            const physical = letter.object.physical
             physical.colliders[0].setActiveEvents(this.game.RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS)
             physical.colliders[0].setContactForceEventThreshold(5)
-            physical.onCollision = (force, position) =>
+            physical.onCollision = (force, position, otherBody) =>
             {
                 this.game.audio.groups.get('hitBrick').playRandomNext(force, position)
+                if(!letter.broken && otherBody?.handle === this.game.physicalVehicle.chassis.physical.body.handle)
+                {
+                    letter.broken = true
+                    this.game.ticker.wait(1, () => this.breakLetter(letter))
+                }
             }
         }
+    }
+
+    breakLetter(letter)
+    {
+        if(!letter.broken)
+            return
+
+        const { object, mesh, blocks } = letter
+        mesh.updateWorldMatrix(true, false)
+        const rotation = mesh.getWorldQuaternion(new THREE.Quaternion())
+        const worldScale = mesh.getWorldScale(new THREE.Vector3())
+        const velocity = object.physical.body.linvel()
+
+        if(blocks.length === 0)
+        {
+            const bounds = mesh.geometry.boundingBox
+            const size = 0.22
+            const depth = bounds.max.z - bounds.min.z
+            const layers = Math.max(1, Math.round(depth / size))
+            const layerDepth = depth / layers
+            const blockGeometry = new THREE.BoxGeometry(size * 0.94, size * 0.94, layerDepth * 0.94)
+            const sample = new THREE.Mesh(mesh.geometry, mesh.material)
+            const ray = new THREE.Raycaster()
+            // Sample the letter silhouette so holes do not turn into solid debris.
+            for(let x = bounds.min.x + size / 2; x < bounds.max.x; x += size)
+            {
+                for(let y = bounds.min.y + size / 2; y < bounds.max.y; y += size)
+                {
+                    ray.set(new THREE.Vector3(x, y, bounds.max.z + 1), new THREE.Vector3(0, 0, -1))
+                    if(ray.intersectObject(sample, false).length === 0)
+                        continue
+                    for(let layer = 0; layer < layers; layer++)
+                    {
+                        const offset = new THREE.Vector3(x, y, bounds.min.z + layerDepth * (layer + 0.5))
+                        const model = new THREE.Mesh(blockGeometry, mesh.material)
+                        model.scale.copy(worldScale)
+                        const block = this.game.objects.add({ model, updateMaterials: false }, {
+                            type: 'dynamic', enabled: false, sleeping: true,
+                            position: offset.clone().applyMatrix4(mesh.matrixWorld), rotation,
+                            mass: 0.02, friction: 0.7,
+                            colliders: [{ shape: 'cuboid', parameters: [size * worldScale.x * 0.47, size * worldScale.y * 0.47, layerDepth * worldScale.z * 0.47], category: 'object' }]
+                        })
+                        blocks.push({ object: block, offset })
+                    }
+                }
+            }
+            if(blocks.length === 0)
+                throw new Error('Expected physical blocks inside the letter silhouette')
+        }
+
+        this.game.objects.disable(object)
+        for(const block of blocks)
+        {
+            const position = block.offset.clone().applyMatrix4(mesh.matrixWorld)
+            const body = block.object.physical.body
+            body.setTranslation(position, false)
+            body.setRotation(rotation, false)
+            this.game.objects.enable(block.object)
+            body.setLinvel({ x: velocity.x + Math.random() - 0.5, y: velocity.y + 1 + Math.random(), z: velocity.z + Math.random() - 0.5 }, true)
+            body.setAngvel({ x: Math.random() * 6 - 3, y: Math.random() * 6 - 3, z: Math.random() * 6 - 3 }, true)
+            block.object.needsUpdate = true
+        }
+    }
+
+    resetLetters()
+    {
+        // Run after resetAll restores the original enabled states for this frame.
+        this.game.ticker.wait(1, () => {
+            for(const letter of this.letters)
+            {
+                for(const block of letter.blocks)
+                    this.game.objects.disable(block.object)
+                this.game.objects.enable(letter.object)
+                letter.broken = false
+            }
+        })
     }
 
     ` + withImports.slice(end);
