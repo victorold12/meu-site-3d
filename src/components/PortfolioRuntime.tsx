@@ -11,7 +11,7 @@ export function PortfolioRuntime() {
   return <>
     <iframe
       className="portfolio-runtime"
-      title="Portfólio interativo de Bruno Simon — estudo local"
+      title="Portfólio 3D interativo de Victor Hugo"
       src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/world/index.html`}
       allow="autoplay; fullscreen; gamepad"
       allowFullScreen

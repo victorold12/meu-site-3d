@@ -1,12 +1,12 @@
-# Estudo técnico — Bruno Simon
+# Portfólio 3D — Victor Hugo
 
-Implementação local da home de https://bruno-simon.com/, com host Next.js e o runtime original modular Three.js/Rapier/GSAP/Howler, atribuído a Bruno Simon. O mundo 3D é executável: não é imagem, vídeo, iframe remoto ou aproximação com CSS.
+Portfólio interativo de Victor Hugo, publicado em https://victorold12.github.io/meu-site-3d/. O mundo 3D usa o runtime aberto Three.js/Rapier/GSAP/Howler, originalmente criado por Bruno Simon e mantido com os créditos e a licença MIT. Os projetos, o letreiro e os textos foram personalizados para Victor Hugo.
 
 **A abordagem é integração do código aberto original, não uma reescrita independente do motor.** Ela preserva as geometrias, física, shaders TSL, câmeras, áudio, navegação e controles. O objetivo deste estudo é permitir ler, modificar e reconstruir esses padrões com evidência de origem. O backend privado do autor permanece desconectado.
 
 ## GitHub Pages
 
-Publicação autorizada pelo proprietário em 18/10/2026 a partir de `D:\MEU-SITE-3D`.
+Publicado a partir de `D:\MEU-SITE-3D`.
 Site: https://victorold12.github.io/meu-site-3d/
 
 O workflow `.github/workflows/pages.yml` publica os pushes em `main`, recuperando
@@ -20,7 +20,7 @@ Após um build de Pages, `npm run build` restaura o build para execução local.
 Preview: **http://127.0.0.1:3077/**. O servidor usa apenas loopback.
 
 ```powershell
-cd 'C:\Users\VTz produti\bruno-simon-study'
+cd 'D:\MEU-SITE-3D'
 # Instalações já realizadas nesta entrega; numa cópia nova:
 .\scripts\bootstrap.ps1
 npm.cmd run extract
@@ -114,9 +114,9 @@ O bundle baixado em `reference/bundle/` **não é executado pelo estudo**. O có
 | Sem máscaras aproximadas | shaders TSL, SVGs e sprites originais mantidos |
 | Templates adaptados ao alvo | não se carregam componentes de Lando/Lenis/Rive ausentes neste site |
 | Moderno sem mudar motion | Next 15/React 19 como host e GSAP original no runtime |
-| Noindex e sem publicação | metadata + header + documento filho; servidor em 127.0.0.1 |
+| Site público sem indexação | metadata + header + documento filho |
 | Verificação por região | tabela de pixels, logs e capturas, sem generalizar regiões dinâmicas |
 
 ## Licença e atribuição
 
-Código e assets necessários ao funcionamento vêm de [brunosimon/folio-2025](https://github.com/brunosimon/folio-2025), copyright © 2025 Bruno Simon, conforme [license.md](upstream/license.md), que deve acompanhar cópias substanciais. O campo `license` do package.json diz ISC, mas o arquivo de licença publicado diz MIT; a discrepância fica registrada. As fontes conservam seus avisos/condições próprios. `resources/` com arquivos Blender de edição não foi baixado. Este material é um estudo local e não é o portfólio oficial.
+Código e assets necessários ao funcionamento vêm de [brunosimon/folio-2025](https://github.com/brunosimon/folio-2025), copyright © 2025 Bruno Simon, conforme [license.md](upstream/license.md). O runtime original continua atribuído ao autor; este site é a versão personalizada de Victor Hugo e não o site oficial de Bruno Simon. As fontes conservam seus avisos e condições próprios.
