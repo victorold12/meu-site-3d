@@ -77,7 +77,7 @@ try {
         const letters = window.game.world.areas.landing.letters;
         return {
           count: letters.length,
-          white: letters.every(letter => letter.mesh.material._colorNode.node.value.getHex() === 0xffffff),
+          white: letters.every(letter => letter.mesh.material._colorNode.node.value.getHex() === 0xffffff && letter.mesh.material.hasLighting === false && letter.mesh.material.hasLightBounce === false),
           intact: letters.every(letter => !letter.broken && letter.object.physical.body.isEnabled()),
         };
       });

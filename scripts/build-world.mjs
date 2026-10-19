@@ -46,6 +46,13 @@ config.plugins.push({
       if (patched === code) throw new Error('Physics collision callback anchor not found');
       return patched;
     }
+    if (id.endsWith('/Game/Materials/MeshDefaultMaterial.js')) {
+      const patched = code
+        .replace('this.hasCoreShadows = parameters.hasCoreShadows ?? true', 'this.hasLighting = parameters.hasLighting ?? true\n        this.hasCoreShadows = parameters.hasCoreShadows ?? true')
+        .replace('outputColor.mulAssign(this.game.lighting.colorUniform.mul(this.game.lighting.intensityUniform))', 'if(this.hasLighting)\n                outputColor.mulAssign(this.game.lighting.colorUniform.mul(this.game.lighting.intensityUniform))');
+      if (patched === code) throw new Error('Letter lighting material anchor not found');
+      return patched;
+    }
     if (id.endsWith('/Game/Game.js')) {
       const patched = code.replace('this.objects.resetAll()', 'this.objects.resetAll()\n            this.world.areas.landing?.resetLetters()');
       if (patched === code) throw new Error('Game reset anchor not found');
@@ -70,7 +77,7 @@ config.plugins.push({
         direction.normalize()
         const center = positions.reduce((sum, position) => sum.add(new THREE.Vector3(position.x, position.y, position.z)), new THREE.Vector3()).multiplyScalar(1 / positions.length)
         const font = new FontLoader().parse(helvetikerBold)
-        const whiteMaterial = new MeshDefaultMaterial({ colorNode: color('#ffffff') })
+        const whiteMaterial = new MeshDefaultMaterial({ colorNode: color('#ffffff'), hasLighting: false, hasLightBounce: false })
         this.letters = []
         const glyphs = letters.map(letter => {
             const geometry = new TextGeometry(letter, {
